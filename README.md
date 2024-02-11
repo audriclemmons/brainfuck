@@ -1,2 +1,7 @@
-# brainfuck
-An optimized brainfuck interpreter written in Rust.
+## About
+An optimized [Brainfuck](http://en.wikipedia.org/wiki/Brainfuck) interpreter written in Rust.
+
+## Usage
+```
+./brainfuck filename
+```
