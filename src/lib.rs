@@ -1,10 +1,57 @@
-use num::{FromPrimitive, Zero};
 use std::collections::HashMap;
-use std::ops::{AddAssign, SubAssign};
+
+pub trait Value {
+    const ZERO: Self;
+
+    fn add(&mut self, n: i32);
+    fn is_zero(&self) -> bool;
+}
+
+impl Value for u32 {
+    const ZERO: Self = 0;
+
+    #[inline]
+    fn add(&mut self, n: i32) {
+        *self = self.wrapping_add_signed(n as i32)
+    }
+
+    #[inline]
+    fn is_zero(&self) -> bool {
+        *self == 0
+    }
+}
+
+impl Value for u16 {
+    const ZERO: Self = 0;
+
+    #[inline]
+    fn add(&mut self, n: i32) {
+        *self = self.wrapping_add_signed(n as i16)
+    }
+
+    #[inline]
+    fn is_zero(&self) -> bool {
+        *self == 0
+    }
+}
+
+impl Value for u8 {
+    const ZERO: Self = 0;
+
+    #[inline]
+    fn add(&mut self, n: i32) {
+        *self = self.wrapping_add_signed(n as i8)
+    }
+
+    #[inline]
+    fn is_zero(&self) -> bool {
+        *self == 0
+    }
+}
 
 #[derive(Debug)]
 pub enum Instruction {
-    Add { offset: isize, value: i32 },
+    Add { offset: isize, n: i32 },
 
     Output { offset: isize },
     Input { offset: isize },
@@ -57,7 +104,7 @@ impl Program {
                     instructions.extend(
                         add_map
                             .drain()
-                            .map(|(offset, value)| Instruction::Add { offset, value }),
+                            .map(|(offset, n)| Instruction::Add { offset, n }),
                     );
 
                     instructions.push(Instruction::Output { offset });
@@ -67,7 +114,7 @@ impl Program {
                     instructions.extend(
                         add_map
                             .drain()
-                            .map(|(offset, value)| Instruction::Add { offset, value }),
+                            .map(|(offset, n)| Instruction::Add { offset, n }),
                     );
 
                     instructions.push(Instruction::Input { offset });
@@ -77,7 +124,7 @@ impl Program {
                     instructions.extend(
                         add_map
                             .drain()
-                            .map(|(offset, value)| Instruction::Add { offset, value }),
+                            .map(|(offset, n)| Instruction::Add { offset, n }),
                     );
 
                     instructions.push(Instruction::Open { offset, close_index: 0 });
@@ -90,7 +137,7 @@ impl Program {
                     instructions.extend(
                         add_map
                             .drain()
-                            .map(|(offset, value)| Instruction::Add { offset, value }),
+                            .map(|(offset, n)| Instruction::Add { offset, n }),
                     );
 
                     let open_index = open_stack.pop().ok_or("unmatched closing bracket(s)")?;
@@ -112,7 +159,7 @@ impl Program {
         instructions.extend(
             add_map
                 .drain()
-                .map(|(offset, value)| Instruction::Add { offset, value }),
+                .map(|(offset, n)| Instruction::Add { offset, n }),
         );
 
         if !open_stack.is_empty() {
@@ -125,7 +172,7 @@ impl Program {
 
 const MEMORY_SIZE: usize = 65536;
 
-pub struct Machine<T: AddAssign + SubAssign + Zero + FromPrimitive> {
+pub struct Machine<T: Value> {
     memory: [T; MEMORY_SIZE],
 
     pc: usize,
@@ -135,10 +182,10 @@ pub struct Machine<T: AddAssign + SubAssign + Zero + FromPrimitive> {
     output: fn(&T),
 }
 
-impl<T: AddAssign + SubAssign + Zero + FromPrimitive> Machine<T> {
+impl<T: Value> Machine<T> {
     pub fn new(input: fn() -> T, output: fn(&T)) -> Machine<T> {
         Machine {
-            memory: [(); MEMORY_SIZE].map(|_| T::zero()),
+            memory: [(); MEMORY_SIZE].map(|_| T::ZERO),
 
             pc: 0,
             pointer: 0,
@@ -158,12 +205,8 @@ impl<T: AddAssign + SubAssign + Zero + FromPrimitive> Machine<T> {
 
         while let Some(instruction) = instructions.get(self.pc) {
             match instruction {
-                Instruction::Add { offset, value } => {
-                    if *value > 0 {
-                        *self.get_memory(*offset) += T::from_i32(*value).unwrap();
-                    } else {
-                        *self.get_memory(*offset) -= T::from_i32(-*value).unwrap();
-                    }
+                Instruction::Add { offset, n } => {
+                    self.get_memory(*offset).add(*n);
                 }
 
                 Instruction::Input { offset } => {
