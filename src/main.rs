@@ -1,7 +1,4 @@
-#![allow(unused)]
-
-use num::{FromPrimitive, ToPrimitive};
-use std::{env, fs, io::{self, Read}, num::TryFromIntError, time::Instant};
+use std::{env, fs, io::{self, Read}};
 
 mod machine;
 mod program;
@@ -44,8 +41,5 @@ fn main() {
     };
     
     let mut machine: Machine<T> = Machine::new(std::io::stdin(), std::io::stdout());
-
-    let now = Instant::now();
     machine.execute(program);
-    println!("Finished in {:.2?}.", now.elapsed());
 }
