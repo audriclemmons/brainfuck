@@ -4,7 +4,7 @@ use brainfuck::{Machine, Program};
 
 type T = Wrapping<u32>;
 
-fn output(value: T) {
+fn output(value: &T) {
     print!("{}", char::from_u32(T::to_u32(&value).unwrap() & 0xFF).unwrap());
 }
 

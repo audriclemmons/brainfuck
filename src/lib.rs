@@ -94,20 +94,20 @@ impl Program {
 
 const MEMORY_SIZE: usize = 65536;
 
-pub struct Machine<T: Copy + AddAssign + SubAssign + Zero + FromPrimitive> {
+pub struct Machine<T: AddAssign + SubAssign + Zero + FromPrimitive> {
     memory: [T; MEMORY_SIZE],
 
     pc: usize,
     pointer: usize,
 
     input: fn() -> T,
-    output: fn(T),
+    output: fn(&T),
 }
 
-impl<T: Copy + AddAssign + SubAssign + Zero + FromPrimitive> Machine<T> {
-    pub fn new(input: fn() -> T, output: fn(T)) -> Machine<T> {
+impl<T: AddAssign + SubAssign + Zero + FromPrimitive> Machine<T> {
+    pub fn new(input: fn() -> T, output: fn(&T)) -> Machine<T> {
         Machine {
-            memory: [T::zero(); MEMORY_SIZE],
+            memory: [(); MEMORY_SIZE].map(|_| T::zero()),
 
             pc: 0,
             pointer: 0,
@@ -152,7 +152,7 @@ impl<T: Copy + AddAssign + SubAssign + Zero + FromPrimitive> Machine<T> {
                 }
 
                 Instruction::Output => {
-                    (self.output)(*self.current());
+                    (self.output)(self.current());
                 }
 
                 Instruction::Input => {
