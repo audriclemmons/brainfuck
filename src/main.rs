@@ -1,8 +1,8 @@
 use num::{FromPrimitive, ToPrimitive};
-use std::{env, fs, io::Read, num::Wrapping, time::Instant};
+use std::{env, fs, io::{self, Read}, num::Wrapping, time::Instant};
 use brainfuck::{Machine, Program};
 
-type T = Wrapping<u16>;
+type T = Wrapping<u32>;
 
 fn output(value: T) {
     print!("{}", char::from_u32(T::to_u32(&value).unwrap() & 0xFF).unwrap());
@@ -15,16 +15,24 @@ fn input() -> T {
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    let Some(path) = &args.get(1) else {
-        eprintln!("no file specified");
-        return;
-    };
+    let source = if let Some(path) = &args.get(1) {
+        match fs::read_to_string(path) {
+            Ok(s) => s,
+            Err(e) => {
+                eprintln!("{}", e);
+                return;
+            }
+        }
+    } else {
+        let mut bytes = Vec::new();
+        let _ = io::stdin().read_to_end(&mut bytes);
 
-    let source = match fs::read_to_string(path) {
-        Ok(s) => s,
-        Err(e) => {
-            eprintln!("{}", e);
-            return;
+        match String::from_utf8(bytes) {
+            Ok(s) => s,
+            Err(e) => {
+                eprintln!("{}", e);
+                return;
+            }
         }
     };
 
