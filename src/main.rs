@@ -1,6 +1,11 @@
 use num::{FromPrimitive, ToPrimitive};
 use std::{env, fs, io::{self, Read}, time::Instant};
-use brainfuck::{Machine, Program};
+
+mod machine;
+mod program;
+mod value;
+
+use crate::{machine::Machine, program::Program};
 
 type T = u32;
 

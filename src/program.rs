@@ -1,54 +1,5 @@
 use std::collections::HashMap;
 
-pub trait Value {
-    const ZERO: Self;
-
-    fn add(&mut self, n: i32);
-    fn is_zero(&self) -> bool;
-}
-
-impl Value for u32 {
-    const ZERO: Self = 0;
-
-    #[inline]
-    fn add(&mut self, n: i32) {
-        *self = self.wrapping_add_signed(n as i32)
-    }
-
-    #[inline]
-    fn is_zero(&self) -> bool {
-        *self == 0
-    }
-}
-
-impl Value for u16 {
-    const ZERO: Self = 0;
-
-    #[inline]
-    fn add(&mut self, n: i32) {
-        *self = self.wrapping_add_signed(n as i16)
-    }
-
-    #[inline]
-    fn is_zero(&self) -> bool {
-        *self == 0
-    }
-}
-
-impl Value for u8 {
-    const ZERO: Self = 0;
-
-    #[inline]
-    fn add(&mut self, n: i32) {
-        *self = self.wrapping_add_signed(n as i8)
-    }
-
-    #[inline]
-    fn is_zero(&self) -> bool {
-        *self == 0
-    }
-}
-
 #[derive(Debug)]
 pub enum Instruction {
     Add { offset: isize, n: i32 },
@@ -62,7 +13,7 @@ pub enum Instruction {
 
 #[derive(Debug)]
 pub struct Program {
-    instructions: Vec<Instruction>,
+    pub instructions: Vec<Instruction>,
 }
 
 impl Program {
@@ -170,71 +121,3 @@ impl Program {
     }
 }
 
-const MEMORY_SIZE: usize = 65536;
-
-pub struct Machine<T: Value> {
-    memory: [T; MEMORY_SIZE],
-
-    pc: usize,
-    pointer: usize,
-
-    input: fn() -> T,
-    output: fn(&T),
-}
-
-impl<T: Value> Machine<T> {
-    pub fn new(input: fn() -> T, output: fn(&T)) -> Machine<T> {
-        Machine {
-            memory: [(); MEMORY_SIZE].map(|_| T::ZERO),
-
-            pc: 0,
-            pointer: 0,
-
-            input,
-            output,
-        }
-    }
-
-    #[inline]
-    fn get_memory(&mut self, offset: isize) -> &mut T {
-        &mut self.memory[self.pointer.wrapping_add_signed(offset)]
-    }
-
-    pub fn execute(&mut self, program: Program) {
-        let instructions = program.instructions;
-
-        while let Some(instruction) = instructions.get(self.pc) {
-            match instruction {
-                Instruction::Add { offset, n } => {
-                    self.get_memory(*offset).add(*n);
-                }
-
-                Instruction::Input { offset } => {
-                    *self.get_memory(*offset) = (self.input)();
-                }
-
-                Instruction::Output { offset } => {
-                    (self.output)(self.get_memory(*offset));
-                }
-
-                Instruction::Open { offset, close_index } => {
-                    if self.get_memory(*offset).is_zero() {
-                        self.pc = *close_index;
-                    }
-
-                    self.pointer = self.pointer.wrapping_add_signed(*offset);
-                }
-
-                Instruction::Close { offset, open_index } => {
-                    if !self.get_memory(*offset).is_zero() {
-                        self.pc = *open_index;
-                    }
-
-                    self.pointer = self.pointer.wrapping_add_signed(*offset);
-                }
-            }
-
-            self.pc += 1;
-        }
-    }
-}
