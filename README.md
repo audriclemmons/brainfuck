@@ -3,4 +3,7 @@ An optimized [Brainfuck](http://en.wikipedia.org/wiki/Brainfuck) interpreter wri
 
 ## Usage
 `./brainfuck sourcefile.bf`
+
+or
+
 `cat sourcefile.bf | ./brainfuck`
