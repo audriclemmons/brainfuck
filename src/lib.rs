@@ -100,26 +100,21 @@ pub struct Machine<T: Copy + AddAssign + SubAssign + Zero + FromPrimitive> {
     pc: usize,
     pointer: usize,
 
-    output: fn(T),
     input: fn() -> T,
+    output: fn(T),
 }
 
 impl<T: Copy + AddAssign + SubAssign + Zero + FromPrimitive> Machine<T> {
-    pub fn new() -> Machine<T> {
+    pub fn new(input: fn() -> T, output: fn(T)) -> Machine<T> {
         Machine {
             memory: [T::zero(); MEMORY_SIZE],
 
             pc: 0,
             pointer: 0,
-
-            output: |_| {},
-            input: || T::zero(),
+            
+            input,
+            output,
         }
-    }
-
-    pub fn bind_io(&mut self, input: fn() -> T, output: fn(T)) {
-        self.output = output;
-        self.input = input;
     }
 
     #[inline(always)]

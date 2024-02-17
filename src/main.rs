@@ -44,8 +44,7 @@ fn main() {
         }
     };
 
-    let mut machine: Machine<T> = Machine::new();
-    machine.bind_io(input, output);
+    let mut machine: Machine<T> = Machine::new(input, output);
 
     let now = Instant::now();
     machine.execute(program);
