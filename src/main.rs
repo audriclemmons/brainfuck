@@ -1,5 +1,7 @@
+#![allow(unused)]
+
 use num::{FromPrimitive, ToPrimitive};
-use std::{env, fs, io::{self, Read}, time::Instant};
+use std::{env, fs, io::{self, Read}, num::TryFromIntError, time::Instant};
 
 mod machine;
 mod program;
@@ -8,14 +10,6 @@ mod value;
 use crate::{machine::Machine, program::Program};
 
 type T = u32;
-
-fn output(value: &T) {
-    print!("{}", char::from_u32(T::to_u32(&value).unwrap() & 0xFF).unwrap());
-}
-
-fn input() -> T {
-    T::from_u8(std::io::stdin().bytes().next().unwrap().unwrap()).unwrap()
-}
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -49,7 +43,7 @@ fn main() {
         }
     };
     
-    let mut machine: Machine<T> = Machine::new(input, output);
+    let mut machine: Machine<T> = Machine::new(std::io::stdin(), std::io::stdout());
 
     let now = Instant::now();
     machine.execute(program);

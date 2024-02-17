@@ -1,3 +1,4 @@
+use std::io::{Read, Write};
 use crate::{value::Value, program::{Program, Instruction}};
 
 const MEMORY_SIZE: usize = 65536;
@@ -8,20 +9,20 @@ pub struct Machine<T: Value> {
     pc: usize,
     pointer: usize,
 
-    input: fn() -> T,
-    output: fn(&T),
+    input: Box<dyn Read>,
+    output: Box<dyn Write>,
 }
 
 impl<T: Value> Machine<T> {
-    pub fn new(input: fn() -> T, output: fn(&T)) -> Machine<T> {
+    pub fn new(input: impl Read + 'static, output: impl Write + 'static) -> Machine<T> {
         Machine {
             memory: [(); MEMORY_SIZE].map(|_| T::ZERO),
 
             pc: 0,
             pointer: 0,
 
-            input,
-            output,
+            input: Box::new(input),
+            output: Box::new(output),
         }
     }
 
@@ -40,11 +41,14 @@ impl<T: Value> Machine<T> {
                 }
 
                 Instruction::Input { offset } => {
-                    *self.get_memory(*offset) = (self.input)();
+                    let mut buffer: [u8; 1] = [0];
+                    self.input.read(&mut buffer);
+                    self.get_memory(*offset).set_byte(buffer[0]);
                 }
 
                 Instruction::Output { offset } => {
-                    (self.output)(self.get_memory(*offset));
+                    let buffer: [u8; 1] = [self.get_memory(*offset).get_byte()];
+                    self.output.write(&buffer);
                 }
 
                 Instruction::Open { offset, close_index } => {
