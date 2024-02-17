@@ -2,7 +2,7 @@ use num::{FromPrimitive, ToPrimitive};
 use std::{env, fs, io::{self, Read}, num::Wrapping, time::Instant};
 use brainfuck::{Machine, Program};
 
-type T = Wrapping<u32>;
+type T = Wrapping<u8>;
 
 fn output(value: &T) {
     print!("{}", char::from_u32(T::to_u32(&value).unwrap() & 0xFF).unwrap());
@@ -43,7 +43,7 @@ fn main() {
             return;
         }
     };
-
+    
     let mut machine: Machine<T> = Machine::new(input, output);
 
     let now = Instant::now();
