@@ -1,7 +1,10 @@
 use std::{
     env, fs,
     io::{self, Read, Write},
+    net::TcpListener,
 };
+
+use std::{thread, time};
 
 mod machine;
 mod program;
@@ -47,16 +50,7 @@ fn main() {
             }
         }
     } else {
-        let mut bytes = Vec::new();
-        let _ = io::stdin().read_to_end(&mut bytes);
-
-        match String::from_utf8(bytes) {
-            Ok(s) => s,
-            Err(e) => {
-                eprintln!("{}", e);
-                return;
-            }
-        }
+        panic!();
     };
 
     let program = match Program::compile(&source) {
@@ -67,10 +61,12 @@ fn main() {
         }
     };
 
-    let mut readwrite = ReadWrite {
-        reader: std::io::stdin(),
-        writer: std::io::stdout(),
-    };
-    
-    Machine::<T>::execute(&program, &mut readwrite);
+    let listener = TcpListener::bind("127.0.0.1:80").unwrap();
+
+    for stream in listener.incoming() {
+        let mut stream = stream.unwrap();
+        Machine::<T>::execute(&program, &mut stream);
+        //thread::sleep(time::Duration::from_millis(10));
+        stream.flush().unwrap();
+    }
 }
