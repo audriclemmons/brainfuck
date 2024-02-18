@@ -1,10 +1,37 @@
-use std::{env, fs, io::{self, Read}};
+use std::{
+    env, fs,
+    io::{self, Read, Write},
+};
 
 mod machine;
 mod program;
 mod value;
 
 use crate::{machine::Machine, program::Program};
+
+struct ReadWrite<R: Read, W: Write> {
+    reader: R,
+    writer: W,
+}
+
+impl<R: Read, W: Write> Read for ReadWrite<R, W> {
+    #[inline]
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        self.reader.read(buf)
+    }
+}
+
+impl<R: Read, W: Write> Write for ReadWrite<R, W> {
+    #[inline]
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.writer.write(buf)
+    }
+
+    #[inline]
+    fn flush(&mut self) -> io::Result<()> {
+        self.writer.flush()
+    }
+}
 
 type T = u32;
 
@@ -39,7 +66,11 @@ fn main() {
             return;
         }
     };
+
+    let mut readwrite = ReadWrite {
+        reader: std::io::stdin(),
+        writer: std::io::stdout(),
+    };
     
-    let mut machine: Machine<T> = Machine::new(std::io::stdin(), std::io::stdout());
-    machine.execute(program);
+    Machine::<T>::execute(program, &mut readwrite);
 }
