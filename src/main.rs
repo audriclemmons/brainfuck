@@ -72,5 +72,5 @@ fn main() {
         writer: std::io::stdout(),
     };
     
-    Machine::<T>::execute(program, &mut readwrite);
+    Machine::<T>::execute(&program, &mut readwrite);
 }

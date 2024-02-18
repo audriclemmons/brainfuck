@@ -28,9 +28,9 @@ impl<T: Value> Machine<T> {
         &mut self.memory[self.pointer.wrapping_add_signed(offset)]
     }
 
-    pub fn execute(program: Program, io: &mut (impl Read + Write)) {
+    pub fn execute(program: &Program, io: &mut (impl Read + Write)) {
         let mut machine: Machine<T> = Machine::new();
-        let instructions = program.instructions;
+        let instructions = &program.instructions;
 
         while let Some(instruction) = instructions.get(machine.pc) {
             match instruction {
