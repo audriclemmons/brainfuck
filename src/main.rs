@@ -14,6 +14,12 @@ struct ReadWrite<R: Read, W: Write> {
     writer: W,
 }
 
+impl<R: Read, W: Write> ReadWrite<R, W> {
+    fn new(reader: R, writer: W) -> ReadWrite<R, W> {
+        ReadWrite { reader, writer }
+    }
+}
+
 impl<R: Read, W: Write> Read for ReadWrite<R, W> {
     #[inline]
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
@@ -67,10 +73,7 @@ fn main() {
         }
     };
 
-    let mut readwrite = ReadWrite {
-        reader: std::io::stdin(),
-        writer: std::io::stdout(),
-    };
-    
+    let mut readwrite = ReadWrite::new(std::io::stdin(), std::io::stdout());
+
     Machine::<T>::execute(&program, &mut readwrite);
 }
