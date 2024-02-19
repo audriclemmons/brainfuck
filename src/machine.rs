@@ -14,7 +14,7 @@ pub struct Machine<T: Value> {
 }
 
 impl<T: Value> Machine<T> {
-    pub fn new() -> Machine<T> {
+    fn new() -> Machine<T> {
         Machine {
             memory: [(); MEMORY_SIZE].map(|_| T::ZERO),
             pointer: 0,
