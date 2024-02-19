@@ -12,19 +12,25 @@ mod value;
 
 use crate::{machine::Machine, program::Program};
 
-struct ReadWrite<R: Read, W: Write> {
-    reader: R,
-    writer: W,
+struct ReadWrite<'a, R: Read, W: Write> {
+    reader: &'a mut R,
+    writer: &'a mut W,
 }
 
-impl<R: Read, W: Write> Read for ReadWrite<R, W> {
+impl<'a, R: Read, W: Write> ReadWrite<'a, R, W> {
+    fn new(reader: &'a mut R, writer: &'a mut W) -> ReadWrite<'a, R, W> {
+        ReadWrite { reader, writer }
+    }
+}
+
+impl<R: Read, W: Write> Read for ReadWrite<'_, R, W> {
     #[inline]
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         self.reader.read(buf)
     }
 }
 
-impl<R: Read, W: Write> Write for ReadWrite<R, W> {
+impl<R: Read, W: Write> Write for ReadWrite<'_, R, W> {
     #[inline]
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.writer.write(buf)
@@ -35,8 +41,6 @@ impl<R: Read, W: Write> Write for ReadWrite<R, W> {
         self.writer.flush()
     }
 }
-
-type T = u32;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -65,8 +69,7 @@ fn main() {
 
     for stream in listener.incoming() {
         let mut stream = stream.unwrap();
-        Machine::<T>::execute(&program, &mut stream);
-        //thread::sleep(time::Duration::from_millis(10));
+        Machine::<u32>::execute(&program, &mut stream);
         stream.flush().unwrap();
     }
 }
