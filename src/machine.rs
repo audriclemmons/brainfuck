@@ -30,9 +30,8 @@ impl<T: Value> Machine<T> {
 
     pub fn execute(program: &Program, io: &mut (impl Read + Write)) {
         let mut machine: Machine<T> = Machine::new();
-        let instructions = &program.instructions;
 
-        while let Some(instruction) = instructions.get(machine.pc) {
+        while let Some(instruction) = program.get(machine.pc) {
             match instruction {
                 Instruction::Add { offset, n } => {
                     machine.get_memory(*offset).add(*n);

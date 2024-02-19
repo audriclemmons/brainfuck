@@ -13,7 +13,7 @@ pub enum Instruction {
 
 #[derive(Debug)]
 pub struct Program {
-    pub instructions: Vec<Instruction>,
+    instructions: Vec<Instruction>,
 }
 
 impl Program {
@@ -118,6 +118,11 @@ impl Program {
         }
 
         Ok(Program { instructions })
+    }
+
+    #[inline]
+    pub fn get(&self, index: usize) -> Option<&Instruction> {
+        self.instructions.get(index)
     }
 }
 
