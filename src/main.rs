@@ -9,25 +9,25 @@ mod value;
 
 use crate::{machine::Machine, program::Program};
 
-struct ReadWrite<R: Read, W: Write> {
-    reader: R,
-    writer: W,
+struct ReadWrite<'a, R: Read, W: Write> {
+    reader: &'a mut R,
+    writer: &'a mut W,
 }
 
-impl<R: Read, W: Write> ReadWrite<R, W> {
-    fn new(reader: R, writer: W) -> ReadWrite<R, W> {
+impl<'a, R: Read, W: Write> ReadWrite<'a, R, W> {
+    fn new(reader: &'a mut R, writer: &'a mut W) -> ReadWrite<'a, R, W> {
         ReadWrite { reader, writer }
     }
 }
 
-impl<R: Read, W: Write> Read for ReadWrite<R, W> {
+impl<R: Read, W: Write> Read for ReadWrite<'_, R, W> {
     #[inline]
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         self.reader.read(buf)
     }
 }
 
-impl<R: Read, W: Write> Write for ReadWrite<R, W> {
+impl<R: Read, W: Write> Write for ReadWrite<'_, R, W> {
     #[inline]
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.writer.write(buf)
@@ -38,8 +38,6 @@ impl<R: Read, W: Write> Write for ReadWrite<R, W> {
         self.writer.flush()
     }
 }
-
-type T = u32;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -73,7 +71,8 @@ fn main() {
         }
     };
 
-    let mut readwrite = ReadWrite::new(std::io::stdin(), std::io::stdout());
+    let mut stdin = std::io::stdin();
+    let mut stdout = std::io::stdout();
 
-    Machine::<T>::execute(&program, &mut readwrite);
+    Machine::<u32>::execute(&program, &mut ReadWrite::new(&mut stdin, &mut stdout));
 }
